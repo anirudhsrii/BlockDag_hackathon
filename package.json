@@ -1,0 +1,25 @@
+{
+  "name": "sentinelai",
+  "version": "0.1.0",
+  "description": "AI-Powered Smart Contract Security Platform",
+  "scripts": {
+    "start": "concurrently \"npm run start:backend\" \"npm run start:frontend\"",
+    "start:backend": "cd backend && python app.py",
+    "start:frontend": "cd frontend && npm start",
+    "install": "npm run install:backend && npm run install:frontend",
+    "install:backend": "cd backend && pip install -r requirements.txt",
+    "install:frontend": "cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "postinstall": "echo \"Setup complete! Run 'npm start' to start the application.\""
+  },
+  "author": "SentinelAI Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anirudhsrii/BlockDag_hackathon.git"
+  },
+  "dependencies": {
+    "concurrently": "^7.6.0"
+  }
+}
