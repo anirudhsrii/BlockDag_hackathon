@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SentinelAI - BlockDag Hackathon</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a6bff;
+            --secondary-color: #6c757d;
+            --accent-color: #ff7b54;
+            --bg-dark: #121212;
+            --bg-light: #f8f9fa;
+            --text-light: #e1e1e1;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: #333;
+        }
+        
+        .navbar {
+            background-color: var(--primary-color);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .navbar-brand {
+            font-weight: 700;
+            color: white !important;
+        }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transition: transform 0.2s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            border-radius: 10px 10px 0 0 !important;
+            font-weight: 600;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: #3a59d9;
+            border-color: #3a59d9;
+        }
+        
+        .alert-danger {
+            background-color: rgba(255, 107, 107, 0.1);
+            border-left: 4px solid #ff6b6b;
+            color: #c53030;
+        }
+        
+        .alert-warning {
+            background-color: rgba(255, 207, 107, 0.1);
+            border-left: 4px solid #ffcf6b;
+            color: #c59430;
+        }
+        
+        .alert-success {
+            background-color: rgba(87, 255, 107, 0.1);
+            border-left: 4px solid #57ff6b;
+            color: #30c546;
+        }
+        
+        .badge-danger {
+            background-color: #ff6b6b;
+        }
+        
+        .badge-warning {
+            background-color: #ffcf6b;
+            color: #333;
+        }
+        
+        .badge-success {
+            background-color: #57ff6b;
+            color: #333;
+        }
+        
+        .code-area {
+            font-family: 'Courier New', monospace;
+            background-color: #2d2d2d;
+            color: #e1e1e1;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        
+        .tab-content {
+            padding: 20px 0;
+        }
+        
+        #loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner-border {
+            width: 3rem;
+            height: 3rem;
+        }
+        
+        .stats-card {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .stats-card h3 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+        
+        .stats-card p {
+            color: var(--secondary-color);
+            margin-bottom: 0;
+        }
+        
+        .vulnerability-bar {
+            height: 24px;
+            border-radius: 12px;
+            background-color: #e9ecef;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+        
+        .vulnerability-bar .progress-bar {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 10px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .dashboard-section {
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#">SentinelAI</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-bs-target="dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-target="analyze">Analyze Contract</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-target="monitor">Monitor Contract</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-bs-target="alerts">Alerts</a>
+                    </li>
+                </ul>
+                <span class="navbar-text text-light">
+                    BlockDag Hackathon Prototype
+                </span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container my-4">
+        <!-- Dashboard View -->
+        <div id="dashboard" class="view-section">
+            <h1 class="mb-4">Dashboard</h1>
+            
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <h3 id="analyzed-contracts">--</h3>
+                        <p>Contracts Analyzed</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <h3 id="vulnerabilities-detected">--</h3>
+                        <p>Vulnerabilities Detected</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <h3 id="monitored-contracts">--</h3>
+                        <p>Contracts Monitored</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card stats-card">
+                        <h3 id="total-alerts">--</h3>
+                        <p>Security Alerts</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            Vulnerability Types
+                        </div>
+                        <div class="card-body" id="vulnerability-types">
+                            <div id="vulnerability-chart">
+                                <!-- Will be populated dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-white">
+                            Recent Alerts
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Contract</th>
+                                            <th>Type</th>
+                                            <th>Severity</th>
+                                            <th>Time</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recent-alerts-table">
+                                        <!-- Will be populated dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analyze Contract View -->
+        <div id="analyze" class="view-section d-none">
+            <h1 class="mb-4">Analyze Smart Contract</h1>
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="contractCode" class="form-label">Smart Contract Code</label>
+                        <textarea class="form-control code-area" id="contractCode" rows="10" placeholder="Paste your Solidity smart contract code here..."></textarea>
+                    </div>
+                    <button id="analyzeButton" class="btn btn-primary">Analyze Contract</button>
+                </div>
+            </div>
+
+            <div id="loading" class="my-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-2">Analyzing contract...</p>
+            </div>
+
+            <div id="analysisResults" class="mt-4 d-none">
+                <h2>Analysis Results</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <div id="resultsContent">
+                            <!-- Will be populated with analysis results -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitor Contract View -->
+        <div id="monitor" class="view-section d-none">
+            <h1 class="mb-4">Monitor Deployed Contract</h1>
+            <div class="card">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="contractAddress" class="form-label">Contract Address</label>
+                        <input type="text" class="form-control" id="contractAddress" placeholder="0x...">
+                    </div>
+                    <div class="mb-3">
+                        <label for="monitoringOptions" class="form-label">Monitoring Options</label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="optionTransactions" checked>
+                            <label class="form-check-label" for="optionTransactions">
+                                Transaction Monitoring
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="optionGas" checked>
+                            <label class="form-check-label" for="optionGas">
+                                Gas Price Anomalies
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" value="" id="optionFrontrunning" checked>
+                            <label class="form-check-label" for="optionFrontrunning">
+                                Front-Running Detection
+                            </label>
+                        </div>
+                    </div>
+                    <button id="monitorButton" class="btn btn-primary">Start Monitoring</button>
+                </div>
+            </div>
+
+            <div id="monitoringResults" class="mt-4 d-none">
+                <div class="alert alert-success">
+                    <h5>Monitoring Started</h5>
+                    <p id="monitoringMessage"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alerts View -->
+        <div id="alerts" class="view-section d-none">
+            <h1 class="mb-4">Security Alerts</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Contract</th>
+                                    <th>Alert Type</th>
+                                    <th>Severity</th>
+                                    <th>Timestamp</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="alerts-table">
+                                <!-- Will be populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // API URL - change this if your backend is hosted elsewhere
+        const API_URL = 'http://localhost:5000';
+        
+        // Navigation handling
+        document.querySelectorAll('.nav-link').forEach(navLink => {
+            navLink.addEventListener('click', function(e) {
+                e.preventDefault();
+                
+                // Update active state
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                this.classList.add('active');
+                
+                // Show corresponding view
+                const targetId = this.getAttribute('data-bs-target');
+                document.querySelectorAll('.view-section').forEach(section => {
+                    section.classList.add('d-none');
+                });
+                document.getElementById(targetId).classList.remove('d-none');
+                
+                // Load data if needed
+                if (targetId === 'dashboard') {
+                    loadDashboardData();
+                } else if (targetId === 'alerts') {
+                    loadAlertsData();
+                }
+            });
+        });
+        
+        // Load dashboard data
+        function loadDashboardData() {
+            fetch(`${API_URL}/api/stats`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.stats) {
+                        const stats = data.stats;
+                        
+                        // Update stats cards
+                        document.getElementById('analyzed-contracts').textContent = stats.analyzed_contracts_count || 0;
+                        document.getElementById('vulnerabilities-detected').textContent = 
+                            Object.values(stats.vulnerabilities_detected || {}).reduce((sum, val) => sum + val, 0);
+                        document.getElementById('monitored-contracts').textContent = stats.monitored_contracts || 0;
+                        document.getElementById('total-alerts').textContent = stats.alerts_generated || 0;
+                        
+                        // Update vulnerability chart
+                        const vulnerabilityChart = document.getElementById('vulnerability-chart');
+                        vulnerabilityChart.innerHTML = '';
+                        
+                        if (stats.vulnerabilities_detected) {
+                            const vulnerabilities = stats.vulnerabilities_detected;
+                            const maxValue = Math.max(...Object.values(vulnerabilities));
+                            
+                            Object.entries(vulnerabilities).forEach(([key, value]) => {
+                                const percentage = (value / maxValue) * 100;
+                                const color = getColorForVulnerabilityType(key);
+                                
+                                vulnerabilityChart.innerHTML += `
+                                    <div class="mb-2">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>${key}</span>
+                                            <span>${value}</span>
+                                        </div>
+                                        <div class="vulnerability-bar">
+                                            <div class="progress-bar" style="width: ${percentage}%; background-color: ${color};">
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            });
+                        }
+                    }
+                })
+                .catch(error => console.error('Error loading dashboard data:', error));
+                
+            // Load recent alerts
+            fetch(`${API_URL}/api/alerts`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.alerts) {
+                        const alertsTable = document.getElementById('recent-alerts-table');
+                        alertsTable.innerHTML = '';
+                        
+                        const alerts = data.alerts.slice(0, 5); // Get only the 5 most recent alerts
+                        
+                        if (alerts.length === 0) {
+                            alertsTable.innerHTML = '<tr><td colspan="4" class="text-center">No alerts found</td></tr>';
+                            return;
+                        }
+                        
+                        alerts.forEach(alert => {
+                            const date = new Date(alert.timestamp * 1000);
+                            const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                            
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${formatContractAddress(alert.contract_address)}</td>
+                                <td>${alert.alert_type || 'Unknown'}</td>
+                                <td>
+                                    <span class="badge bg-${getSeverityClass(alert.severity)}">${alert.severity}</span>
+                                </td>
+                                <td>${alert.human_time || formattedDate}</td>
+                            `;
+                            
+                            alertsTable.appendChild(row);
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading alerts:', error));
+        }
+        
+        // Load alerts data
+        function loadAlertsData() {
+            fetch(`${API_URL}/api/alerts`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success' && data.alerts) {
+                        const alertsTable = document.getElementById('alerts-table');
+                        alertsTable.innerHTML = '';
+                        
+                        const alerts = data.alerts;
+                        
+                        if (alerts.length === 0) {
+                            alertsTable.innerHTML = '<tr><td colspan="6" class="text-center">No alerts found</td></tr>';
+                            return;
+                        }
+                        
+                        alerts.forEach(alert => {
+                            const date = new Date(alert.timestamp * 1000);
+                            const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+                            
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${alert.id}</td>
+                                <td>${formatContractAddress(alert.contract_address)}</td>
+                                <td>${alert.alert_type || 'Unknown'}</td>
+                                <td>
+                                    <span class="badge bg-${getSeverityClass(alert.severity)}">${alert.severity}</span>
+                                </td>
+                                <td>${alert.human_time || formattedDate}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-outline-primary view-alert-details" 
+                                        data-alert-id="${alert.id}">View Details</button>
+                                </td>
+                            `;
+                            
+                            alertsTable.appendChild(row);
+                        });
+                        
+                        // Add event listeners for view details buttons
+                        document.querySelectorAll('.view-alert-details').forEach(button => {
+                            button.addEventListener('click', function() {
+                                const alertId = this.getAttribute('data-alert-id');
+                                alert(`Alert details functionality would be implemented in the full version. Alert ID: ${alertId}`);
+                            });
+                        });
+                    }
+                })
+                .catch(error => console.error('Error loading alerts data:', error));
+        }
+        
+        // Analyze contract form
+        document.getElementById('analyzeButton').addEventListener('click', function() {
+            const contractCode = document.getElementById('contractCode').value.trim();
+            
+            if (!contractCode) {
+                alert('Please enter smart contract code');
+                return;
+            }
+            
+            // Show loading indicator
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('analysisResults').classList.add('d-none');
+            
+            // Call API to analyze contract
+            fetch(`${API_URL}/api/analyze`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: contractCode })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('analysisResults').classList.remove('d-none');
+                
+                // Display results
+                const resultsContent = document.getElementById('resultsContent');
+                
+                if (data.status === 'success' && data.vulnerabilities) {
+                    const results = data.vulnerabilities;
+                    const findings = results.findings || [];
+                    
+                    let html = `
+                        <div class="alert ${findings.length > 0 ? 'alert-warning' : 'alert-success'}">
+                            <h4>${findings.length > 0 ? 'Issues Found' : 'No Issues Found'}</h4>
+                            <p>Contract analysis completed. Risk level: <strong>${results.risk_level}</strong></p>
+                        </div>
+                    `;
+                    
+                    if (findings.length > 0) {
+                        html += '<div class="mt-4"><h5>Vulnerabilities</h5><div class="list-group">';
+                        
+                        findings.forEach(finding => {
+                            html += `
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">${finding.type}</h5>
+                                        <span class="badge bg-warning">${finding.confidence}</span>
+                                    </div>
+                                    <p class="mb-1">Line ${finding.line_number}: ${finding.context}</p>
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div></div>';
+                    }
+                    
+                    resultsContent.innerHTML = html;
+                } else {
+                    resultsContent.innerHTML = `
+                        <div class="alert alert-danger">
+                            <h4>Error</h4>
+                            <p>${data.error || 'An unknown error occurred during analysis'}</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('analysisResults').classList.remove('d-none');
+                
+                document.getElementById('resultsContent').innerHTML = `
+                    <div class="alert alert-danger">
+                        <h4>Error</h4>
+                        <p>Could not connect to the backend API. Make sure the server is running.</p>
+                    </div>
+                `;
+                
+                console.error('Error analyzing contract:', error);
+            });
+        });
+        
+        // Monitor contract form
+        document.getElementById('monitorButton').addEventListener('click', function() {
+            const contractAddress = document.getElementById('contractAddress').value.trim();
+            
+            if (!contractAddress) {
+                alert('Please enter a contract address');
+                return;
+            }
+            
+            // Call API to start monitoring
+            fetch(`${API_URL}/api/monitor`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ address: contractAddress })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    document.getElementById('monitoringResults').classList.remove('d-none');
+                    document.getElementById('monitoringMessage').textContent = data.message;
+                } else {
+                    alert(data.error || 'An error occurred while starting monitoring');
+                }
+            })
+            .catch(error => {
+                alert('Could not connect to the backend API. Make sure the server is running.');
+                console.error('Error starting monitoring:', error);
+            });
+        });
+        
+        // Helper functions
+        function formatContractAddress(address) {
+            if (!address) return 'Unknown';
+            return `${address.substr(0, 6)}...${address.substr(-4)}`;
+        }
+        
+        function getSeverityClass(severity) {
+            if (!severity) return 'secondary';
+            
+            switch (severity.toLowerCase()) {
+                case 'critical':
+                case 'high':
+                    return 'danger';
+                case 'medium':
+                    return 'warning';
+                case 'low':
+                    return 'success';
+                default:
+                    return 'secondary';
+            }
+        }
+        
+        function getColorForVulnerabilityType(type) {
+            const colors = {
+                'Reentrancy': '#ff6b6b',
+                'Access Control': '#4a6bff',
+                'Arithmetic Issues': '#ff9f43',
+                'Unchecked Return Values': '#ff6b9a',
+                'Other Vulnerabilities': '#6c757d'
+            };
+            
+            return colors[type] || '#6c757d';
+        }
+        
+        // Initialize the dashboard view
+        loadDashboardData();
+    </script>
+</body>
+</html>

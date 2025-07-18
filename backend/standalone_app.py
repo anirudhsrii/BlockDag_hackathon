@@ -1,54 +1,9 @@
-from flask import Flask, request, jsonify
 import os
-import json
-import traceback
+import sys
+from flask import Flask, request, jsonify
 
-try:
-    from model import SmartContractAnalyzer
-    print("Successfully imported SmartContractAnalyzer")
-except Exception as e:
-    print(f"Error importing SmartContractAnalyzer: {str(e)}")
-    print("Using mock analyzer instead")
-    
-    # Create a mock analyzer if import fails
-    class MockAnalyzer:
-        def __init__(self):
-            self.analyzed_count = 0
-            self.vulnerability_stats = {
-                "Reentrancy": 8,
-                "Access Control": 12,
-                "Arithmetic Issues": 6,
-                "Unchecked Return Values": 15,
-                "Other Vulnerabilities": 4
-            }
-        
-        def analyze_code(self, code):
-            self.analyzed_count += 1
-            return {
-                'contract_size': len(code),
-                'findings_count': 2,
-                'findings': [
-                    {
-                        'type': "Reentrancy",
-                        'line_number': 42,
-                        'context': "function withdraw() external {",
-                        'confidence': 'High (0.89)'
-                    },
-                    {
-                        'type': "Unchecked Return Values",
-                        'line_number': 85,
-                        'context': "recipient.send(address(this).balance);",
-                        'confidence': 'High (0.82)'
-                    }
-                ],
-                'risk_level': "Medium"
-            }
-            
-        def get_analyzed_count(self):
-            return self.analyzed_count
-            
-        def get_vulnerability_stats(self):
-            return self.vulnerability_stats
+# Make sure we can find the project files
+sys.path.append(os.path.dirname(__file__))
 
 app = Flask(__name__)
 
@@ -72,15 +27,32 @@ mock_alerts = [
     }
 ]
 
-# Initialize our AI model
-print("Initializing SentinelAI backend...")
-analyzer = SmartContractAnalyzer()
+# Mock vulnerability patterns
+vulnerability_types = [
+    "Reentrancy",
+    "Access Control",
+    "Arithmetic Issues",
+    "Unchecked Return Values",
+    "Other Vulnerabilities"
+]
+
+# Mock vulnerability statistics
+vulnerability_stats = {
+    "Reentrancy": 8,
+    "Access Control": 12,
+    "Arithmetic Issues": 6,
+    "Unchecked Return Values": 15,
+    "Other Vulnerabilities": 4
+}
+
+# Mock analyzer
+analyzed_count = 0
 
 @app.route('/')
 def index():
     return jsonify({
         "status": "success", 
-        "message": "SentinelAI API is running. Access frontend at http://localhost:3000"
+        "message": "SentinelAI API is running. This is a prototype version."
     })
 
 @app.route('/api/analyze', methods=['POST'])
@@ -95,12 +67,41 @@ def analyze_contract():
         
         contract_code = data['code']
         
-        # Analyze the contract code using our AI model
-        vulnerabilities = analyzer.analyze_code(contract_code)
+        # For the prototype, we'll just return mock analysis results
+        global analyzed_count
+        analyzed_count += 1
+        
+        # Check for some basic patterns
+        findings = []
+        
+        # Check for possible reentrancy
+        if "function withdraw" in contract_code.lower() and (".transfer" in contract_code.lower() or ".send" in contract_code.lower() or ".call" in contract_code.lower()):
+            findings.append({
+                'type': "Reentrancy",
+                'line_number': contract_code.lower().find("function withdraw") // 30 + 1,
+                'context': "Withdrawal function that uses external calls",
+                'confidence': 'High (0.89)'
+            })
+        
+        # Check for possible unchecked return values
+        if ".call" in contract_code.lower() and "require" not in contract_code.lower():
+            findings.append({
+                'type': "Unchecked Return Values",
+                'line_number': contract_code.lower().find(".call") // 30 + 1,
+                'context': "Call without checking return value",
+                'confidence': 'High (0.82)'
+            })
+        
+        results = {
+            'contract_size': len(contract_code),
+            'findings_count': len(findings),
+            'findings': findings,
+            'risk_level': "High" if len(findings) >= 2 else "Medium" if len(findings) == 1 else "Low"
+        }
         
         return jsonify({
             'status': 'success',
-            'vulnerabilities': vulnerabilities
+            'vulnerabilities': results
         })
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -117,16 +118,11 @@ def monitor_contract():
         
         contract_address = data['address']
         
-        # For the prototype, we'll just return a success message
-        print(f"Started monitoring contract at {contract_address} (prototype)")
-        
         return jsonify({
             'status': 'success',
             'message': f'Started monitoring contract at {contract_address}'
         })
     except Exception as e:
-        print(f"Error in monitor_contract: {str(e)}")
-        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/alerts', methods=['GET'])
@@ -149,8 +145,6 @@ def get_alerts():
             'alerts': alerts
         })
     except Exception as e:
-        print(f"Error in get_alerts: {str(e)}")
-        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/stats', methods=['GET'])
@@ -161,8 +155,8 @@ def get_stats():
     try:
         # For the prototype, we'll return mock stats
         mock_stats = {
-            'analyzed_contracts_count': analyzer.get_analyzed_count(),
-            'vulnerabilities_detected': analyzer.get_vulnerability_stats(),
+            'analyzed_contracts_count': analyzed_count,
+            'vulnerabilities_detected': vulnerability_stats,
             'monitored_contracts': 16,
             'alerts_generated': len(mock_alerts)
         }
@@ -172,8 +166,6 @@ def get_stats():
             'stats': mock_stats
         })
     except Exception as e:
-        print(f"Error in get_stats: {str(e)}")
-        print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
 
 # Enable CORS for development
@@ -187,5 +179,5 @@ def after_request(response):
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     print(f"Starting SentinelAI backend on port {port}")
-    print(f"Access frontend at http://localhost:3000")
+    print(f"Access the API at http://localhost:{port}")
     app.run(debug=True, host='0.0.0.0', port=port)
