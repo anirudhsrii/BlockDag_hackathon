@@ -1,3 +1,5 @@
+<img width="2063" height="1105" alt="image" src="https://github.com/user-attachments/assets/764927d2-38a9-474c-82a6-6768021883fb" />
+
 # SentinelAI: Blockchain Security Platform
 
 ![BlockDag Hackathon](https://via.placeholder.com/800x100?text=BlockDag+Hackathon+2025)
