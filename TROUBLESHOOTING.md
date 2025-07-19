@@ -42,6 +42,20 @@ If you encounter errors running the scripts, try these commands:
 .\run.ps1
 ```
 
+### "Install" Command Not Found
+
+If you see an error like:
+```
+install : The term 'install' is not recognized as the name of a cmdlet, function...
+```
+
+Always use the full Python command for installing packages:
+```
+python -m pip install package_name
+```
+
+Do not use just `install package_name` as this is not a valid PowerShell command.
+
 ### Module Import Errors
 
 If you see errors about missing Python modules:
